@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Camera, Upload } from "lucide-react";
 import { BackNav } from "../components/BackNav";
@@ -22,8 +22,23 @@ export default function Capture() {
     streamRef.current = null;
   }, []);
 
+  useEffect(() => {
+    function onPopState() {
+      setStep((prev) => {
+        if (prev === "camera" || prev === "preview") {
+          stopCamera();
+          return "choose";
+        }
+        return prev;
+      });
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [stopCamera]);
+
   async function startCamera() {
     setCameraError(null);
+    history.pushState({ captureStep: "camera" }, "");
     setStep("camera");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
@@ -45,6 +60,7 @@ export default function Capture() {
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
     stopCamera();
     setPhoto(dataUrl);
+    history.pushState({ captureStep: "preview" }, "");
     setStep("preview");
   }
 
@@ -54,6 +70,7 @@ export default function Capture() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       setPhoto(ev.target?.result as string);
+      history.pushState({ captureStep: "preview" }, "");
       setStep("preview");
     };
     reader.readAsDataURL(file);
