@@ -137,13 +137,32 @@ function EntryDetail({ entry }: { entry: ReturnType<typeof getDiary>[number] }) 
               }}
             >
               <div style={{ position: "relative", width: "100%", paddingTop: "133.33%" }}>
-                {entry.photo && (
+                {entry.isBlend && entry.blendPhotos ? (
+                  <div style={{ position: "absolute", inset: 0, display: "flex" }}>
+                    {[0, 1].map((i) => {
+                      const src = entry.blendPhotos![i];
+                      return (
+                        <div key={i} style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+                          {src ? (
+                            <img
+                              src={src}
+                              alt={entry.name}
+                              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                            />
+                          ) : (
+                            <div style={{ position: "absolute", inset: 0, background: "#E0DEDA" }} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : entry.photo ? (
                   <img
                     src={entry.photo}
                     alt={entry.name}
                     style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   />
-                )}
+                ) : null}
                 {/* Inset border */}
                 <div
                   style={{

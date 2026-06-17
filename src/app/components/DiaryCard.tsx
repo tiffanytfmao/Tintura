@@ -170,37 +170,23 @@ function BlendPhotoComposite({
   name: string;
 }) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        display: "flex",
-      }}
-    >
-      {photos[0] && (
-        <div style={{ flex: 1, overflow: "hidden" }}>
-          <img
-            src={photos[0]}
-            alt={name}
-            style={{ width: "200%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        </div>
-      )}
-      {photos[1] && (
-        <div style={{ flex: 1, overflow: "hidden" }}>
-          <img
-            src={photos[1]}
-            alt={name}
-            style={{
-              width: "200%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              marginLeft: "-100%",
-            }}
-          />
-        </div>
-      )}
+    <div style={{ position: "absolute", inset: 0, display: "flex" }}>
+      {[0, 1].map((i) => {
+        const src = photos[i];
+        return (
+          <div key={i} style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+            {src ? (
+              <img
+                src={src}
+                alt={name}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            ) : (
+              <div style={{ position: "absolute", inset: 0, background: "#E0DEDA" }} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

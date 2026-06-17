@@ -19,18 +19,30 @@ export interface DiaryEntry {
   blendPhotos?: [string | null, string | null];
 }
 
-// ─── Seed entry ───────────────────────────────────────────────────────────────
+// ─── Seed entries ─────────────────────────────────────────────────────────────
 
-const SEED: DiaryEntry = {
-  id: "seed_tintura_001",
-  photo:
-    "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=1067&fit=crop&auto=format",
-  name: "Morning light. The coffee had three colours and none of them were brown.",
-  swatches: ["#C8956C", "#F0D4B0", "#6B3D2E", "#E8C89A", "#2C1810"],
-  timestamp: "2025-06-01T07:23:00.000Z",
-  location: "Home",
-  isBlend: false,
-};
+const SEEDS: DiaryEntry[] = [
+  {
+    id: "seed_tintura_001",
+    photo:
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=1067&fit=crop&auto=format",
+    name: "Morning light. The coffee had three colours and none of them were brown.",
+    swatches: ["#C8956C", "#F0D4B0", "#6B3D2E", "#E8C89A", "#2C1810"],
+    timestamp: "2025-06-01T07:23:00.000Z",
+    location: "Home",
+    isBlend: false,
+  },
+  {
+    id: "seed_tintura_002",
+    photo:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=1067&fit=crop&auto=format",
+    name: "Coast. The sea kept changing its mind about what colour blue it wanted to be.",
+    swatches: ["#5B8FA8", "#C4DDE8", "#F2E8D8", "#2C4E6A", "#8FBDD3"],
+    timestamp: "2025-06-05T17:45:00.000Z",
+    location: "Coast",
+    isBlend: false,
+  },
+];
 
 // ─── Keys ─────────────────────────────────────────────────────────────────────
 
@@ -42,19 +54,25 @@ const ROLL_KEY = "tintura_roll";
 export function getDiary(): DiaryEntry[] {
   const raw = localStorage.getItem(DIARY_KEY);
   if (!raw) {
-    setDiary([SEED]);
-    return [SEED];
+    setDiary(SEEDS);
+    return SEEDS;
   }
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      setDiary([SEED]);
-      return [SEED];
+      setDiary(SEEDS);
+      return SEEDS;
+    }
+    // Upgrade: if diary only has the original single seed, add the second one
+    if (parsed.length === 1 && parsed[0].id === "seed_tintura_001") {
+      const upgraded = SEEDS;
+      setDiary(upgraded);
+      return upgraded;
     }
     return parsed as DiaryEntry[];
   } catch {
-    setDiary([SEED]);
-    return [SEED];
+    setDiary(SEEDS);
+    return SEEDS;
   }
 }
 
