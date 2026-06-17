@@ -90,6 +90,7 @@ function NavCaptureCTA() {
         +
       </span>
       <span
+        className="nav-cta-text"
         style={{
           fontFamily: "var(--font-ui)",
           fontWeight: 400,
@@ -115,10 +116,10 @@ export function Nav() {
   return (
     <nav style={{ borderBottom: "1px solid #E8E4DC" }}>
       <div
+        className="nav-inner"
         style={{
           maxWidth: 1200,
           margin: "0 auto",
-          padding: "16px 48px 20px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -149,6 +150,7 @@ export function Nav() {
         {isDiary && <NavCaptureCTA />}
 
         <button
+          className="nav-reel"
           onClick={() => navigate("/roll")}
           onMouseEnter={() => setReelHovered(true)}
           onMouseLeave={() => setReelHovered(false)}
@@ -167,6 +169,7 @@ export function Nav() {
         >
           <ReelIcon spinning={reelHovered} />
           <span
+            className="nav-reel-label"
             style={{
               fontFamily: "var(--font-ui)",
               fontWeight: 400,
@@ -205,6 +208,13 @@ export default function Root() {
         }
         ::-webkit-scrollbar { width: 0; height: 0; }
         * { scrollbar-width: none; }
+        .nav-inner { padding: 16px 48px 20px; }
+        @media (max-width: 640px) {
+          .nav-inner { padding: 14px 20px 16px; }
+          .nav-reel-label { display: none; }
+          .nav-reel svg { width: 28px; height: 28px; }
+          .nav-cta-text { display: none; }
+        }
       `}</style>
       <Nav />
       <Outlet />

@@ -274,7 +274,7 @@ export default function Diary() {
   }
 
   return (
-    <main style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 48px 120px" }}>
+    <main className="diary-main" style={{ maxWidth: 1200, margin: "0 auto" }}>
 
       {/* Toolbar row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: filterOpen ? 0 : 40 }}>
@@ -345,10 +345,8 @@ export default function Diary() {
           </div>
         </div>
 
-        {/* Right: capture CTA + blend pill */}
+        {/* Right: blend pill */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <CaptureCTA onClick={() => navigate("/capture")} />
-
           <button
             onClick={() => navigate("/blend")}
             style={{
@@ -504,10 +502,18 @@ export default function Diary() {
         </div>
       )}
 
-      {/* Responsive grid */}
+      {/* Masonry grid */}
       <style>{`
-        .diary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; align-items: start; }
-        @media (max-width: 1000px) { .diary-grid { grid-template-columns: repeat(2, 1fr); } }
+        .diary-main { padding: 48px 48px 120px; }
+        .diary-grid { columns: 4; column-gap: 24px; }
+        .diary-card-wrap { break-inside: avoid; margin-bottom: 24px; display: block; }
+        .diary-divider-wrap { column-span: all; display: block; }
+        .diary-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 100px; gap: 12px; }
+        @media (max-width: 1024px) { .diary-grid { columns: 2; } }
+        @media (max-width: 640px) {
+          .diary-main { padding: 32px 20px 80px; }
+          .diary-grid { columns: 1; }
+        }
       `}</style>
 
       <div
@@ -517,7 +523,7 @@ export default function Diary() {
         {allEntries.length === 0 ? (
           <EmptyState />
         ) : filteredEntries.length === 0 ? (
-          <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingTop: 100, gap: 12 }}>
+          <div className="diary-empty">
             <p style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontStyle: "italic", fontSize: 18, color: "var(--color-text-secondary)", margin: 0 }}>
               nothing matches these filters
             </p>
@@ -531,9 +537,13 @@ export default function Diary() {
         ) : (
           items.map((item) =>
             item.type === "divider" ? (
-              <SectionDivider key={item.key} label={item.label} />
+              <div key={item.key} className="diary-divider-wrap">
+                <SectionDivider label={item.label} />
+              </div>
             ) : (
-              <DiaryCard key={item.key} entry={item.entry} />
+              <div key={item.key} className="diary-card-wrap">
+                <DiaryCard entry={item.entry} />
+              </div>
             )
           )
         )}
