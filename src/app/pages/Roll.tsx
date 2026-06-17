@@ -229,9 +229,7 @@ export default function Roll() {
             The Roll
           </h1>
           <p style={{ fontFamily: "var(--font-ui)", fontWeight: 400, fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
-            {developingCount === 0
-              ? `${MAX_SLOTS} frames ready — go capture something.`
-              : `${developingCount} photo${developingCount !== 1 ? "s" : ""} developing · ${emptyCount} frame${emptyCount !== 1 ? "s" : ""} left`}
+            {`${developingCount} photo${developingCount !== 1 ? "s" : ""} developing · ${emptyCount} frame${emptyCount !== 1 ? "s" : ""} left`}
           </p>
         </div>
 

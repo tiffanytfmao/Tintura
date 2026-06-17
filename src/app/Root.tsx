@@ -148,38 +148,36 @@ export function Nav() {
         {/* Centered capture CTA — diary home only */}
         {isDiary && <NavCaptureCTA />}
 
-        {rollCount > 0 && (
-          <button
-            onClick={() => navigate("/roll")}
-            onMouseEnter={() => setReelHovered(true)}
-            onMouseLeave={() => setReelHovered(false)}
+        <button
+          onClick={() => navigate("/roll")}
+          onMouseEnter={() => setReelHovered(true)}
+          onMouseLeave={() => setReelHovered(false)}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: 4,
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          <ReelIcon spinning={reelHovered} />
+          <span
             style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              gap: 4,
-              position: "relative",
-              zIndex: 1,
+              fontFamily: "var(--font-ui)",
+              fontWeight: 400,
+              fontSize: 11,
+              color: "#8C8880",
+              letterSpacing: "0.01em",
             }}
           >
-            <ReelIcon spinning={reelHovered} />
-            <span
-              style={{
-                fontFamily: "var(--font-ui)",
-                fontWeight: 400,
-                fontSize: 11,
-                color: "#8C8880",
-                letterSpacing: "0.01em",
-              }}
-            >
-              {rollCount} photos developing
-            </span>
-          </button>
-        )}
+            {rollCount} photos developing
+          </span>
+        </button>
       </div>
     </nav>
   );
