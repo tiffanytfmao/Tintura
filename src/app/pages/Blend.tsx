@@ -192,23 +192,12 @@ function BlendResultPanel({ left, right, name, setName, blendPalette, setBlendPa
       <div style={{ display: "flex", gap: 6, alignItems: "flex-start", animation: shake ? "blend-shake 0.45s ease" : "none" }}>
         {blendPalette.map((color, i) => (
           <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-            <div style={{ width: "100%", height: 48, borderRadius: 3, background: color, position: "relative" }}>
-              <button
-                onClick={() => removeColor(i)}
-                style={{
-                  position: "absolute", top: -6, right: -6, width: 16, height: 16, borderRadius: "50%",
-                  background: blendPalette.length <= 1 ? "#E8E4DC" : "#1A1814",
-                  color: blendPalette.length <= 1 ? "#8C8880" : "#F9F7F4",
-                  fontSize: 9, border: "none", display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: blendPalette.length <= 1 ? "not-allowed" : "pointer", padding: 0,
-                }}
-              >×</button>
-            </div>
+            <div style={{ width: "100%", height: 48, borderRadius: 3, background: color }} />
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#8C8880", marginTop: 4, textAlign: "center" }}>{color}</span>
           </div>
         ))}
         {blendPalette.length < 5 && Array.from({ length: 5 - blendPalette.length }).map((_, i) => (
-          <div key={`e${i}`} style={{ flex: 1, height: 48, borderRadius: 3, border: "1px dashed #C4A882", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: "#C4A882", fontSize: 20 }}>+</div>
+          <div key={`e${i}`} style={{ flex: 1, height: 48, borderRadius: 3, border: "1px dashed #C4A882", background: "transparent" }} />
         ))}
       </div>
 
@@ -230,23 +219,17 @@ function BlendResultPanel({ left, right, name, setName, blendPalette, setBlendPa
                 <div
                   key={i}
                   onClick={() => !used && addColor(color)}
-                  style={{ width: 36, height: 36, borderRadius: 3, background: color, position: "relative", opacity: used ? 0.25 : 1, cursor: used ? "not-allowed" : "pointer", transition: "transform 150ms ease, opacity 150ms ease", flexShrink: 0 }}
-                  onMouseEnter={(e) => {
-                    if (!used) {
-                      (e.currentTarget as HTMLElement).style.transform = "scale(1.08)";
-                      const overlay = e.currentTarget.querySelector(".add-overlay") as HTMLElement;
-                      if (overlay) overlay.style.opacity = "1";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform = "scale(1)";
-                    const overlay = e.currentTarget.querySelector(".add-overlay") as HTMLElement;
-                    if (overlay) overlay.style.opacity = "0";
-                  }}
+                  style={{ width: 36, height: 36, borderRadius: 3, background: color, position: "relative", opacity: used ? 0.35 : 1, cursor: used ? "default" : "pointer", transition: "transform 150ms ease, opacity 150ms ease", flexShrink: 0 }}
+                  onMouseEnter={(e) => { if (!used) (e.currentTarget as HTMLElement).style.transform = "scale(1.08)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
                 >
-                  {!used && (
-                    <div className="add-overlay" style={{ position: "absolute", inset: 0, borderRadius: 3, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 150ms ease" }}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  {used ? (
+                    <div style={{ position: "absolute", top: -5, right: -5, width: 14, height: 14, borderRadius: "50%", background: "#7DB88A", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2 3-3" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </div>
+                  ) : (
+                    <div style={{ position: "absolute", top: -5, right: -5, width: 14, height: 14, borderRadius: "50%", background: "#C4A882", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="white" strokeWidth="1.2" strokeLinecap="round" /></svg>
                     </div>
                   )}
                 </div>
