@@ -13,6 +13,25 @@ import {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function loadImg(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function drawCoverFit(ctx: CanvasRenderingContext2D, img: HTMLImageElement, dx: number, dy: number, dw: number, dh: number) {
+  const ia = img.naturalWidth / img.naturalHeight;
+  const ca = dw / dh;
+  let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+  if (ia > ca) { sw = img.naturalHeight * ca; sx = (img.naturalWidth - sw) / 2; }
+  else { sh = img.naturalWidth / ca; sy = (img.naturalHeight - sh) / 2; }
+  ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
 function toHex(r: number, g: number, b: number) {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
@@ -108,8 +127,9 @@ function Swatch({ color, size, onRemove, showHex }: {
 
 // ─── Canvas picker ────────────────────────────────────────────────────────────
 
-function CanvasPicker({ photoUrl, swatches, onAddSwatch, onShake, canvasRef, developing }: {
+function CanvasPicker({ photoUrl, blendPhotos, swatches, onAddSwatch, onShake, canvasRef, developing }: {
   photoUrl: string;
+  blendPhotos?: [string | null, string | null];
   swatches: string[];
   onAddSwatch: (hex: string) => void;
   onShake: () => void;
@@ -125,6 +145,44 @@ function CanvasPicker({ photoUrl, swatches, onAddSwatch, onShake, canvasRef, dev
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    if (blendPhotos) {
+      // Draw 50/50 composite from both photos
+      Promise.all([
+        blendPhotos[0] ? loadImg(blendPhotos[0]) : Promise.resolve(null),
+        blendPhotos[1] ? loadImg(blendPhotos[1]) : Promise.resolve(null),
+      ]).then(([img0, img1]) => {
+        const container = containerRef.current;
+        if (!container || !canvas) return;
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.fillStyle = "#E0DEDA";
+        ctx.fillRect(0, 0, w, h);
+        if (img0) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(0, 0, w / 2, h);
+          ctx.clip();
+          drawCoverFit(ctx, img0, 0, 0, w, h);
+          ctx.restore();
+        }
+        if (img1) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(w / 2, 0, w / 2, h);
+          ctx.clip();
+          drawCoverFit(ctx, img1, 0, 0, w, h);
+          ctx.restore();
+        }
+        setImageReady(true);
+      });
+      return;
+    }
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
@@ -136,17 +194,7 @@ function CanvasPicker({ photoUrl, swatches, onAddSwatch, onShake, canvasRef, dev
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      const imgAspect = img.naturalWidth / img.naturalHeight;
-      const canvasAspect = w / h;
-      let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
-      if (imgAspect > canvasAspect) {
-        sw = img.naturalHeight * canvasAspect;
-        sx = (img.naturalWidth - sw) / 2;
-      } else {
-        sh = img.naturalWidth / canvasAspect;
-        sy = (img.naturalHeight - sh) / 2;
-      }
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+      drawCoverFit(ctx, img, 0, 0, w, h);
       setImageReady(true);
     };
     img.onerror = () => {
@@ -166,7 +214,7 @@ function CanvasPicker({ photoUrl, swatches, onAddSwatch, onShake, canvasRef, dev
       setImageReady(true);
     };
     img.src = photoUrl;
-  }, [photoUrl, canvasRef]);
+  }, [photoUrl, blendPhotos, canvasRef]);
 
   const drawLoupe = useCallback((canvasX: number, canvasY: number) => {
     const canvas = canvasRef.current;
@@ -367,6 +415,7 @@ export default function Curation() {
             </span>
             <CanvasPicker
               photoUrl={photoUrl}
+              blendPhotos={diaryEntry?.isBlend ? diaryEntry.blendPhotos : undefined}
               swatches={swatches}
               onAddSwatch={handleAddSwatch}
               onShake={handleShake}
