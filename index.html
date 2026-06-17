@@ -14,6 +14,16 @@
 
     <body>
       
+      <script>
+        // Restore path after GitHub Pages 404 redirect
+        (function() {
+          var p = window.location.search.slice(1).split('&').find(function(s) { return s.startsWith('p='); });
+          if (p) {
+            var path = decodeURIComponent(p.slice(2));
+            window.history.replaceState(null, null, '/' + path);
+          }
+        })();
+      </script>
       <div id="root"></div>
       <script type="module" src="/src/main.tsx"></script>
       
