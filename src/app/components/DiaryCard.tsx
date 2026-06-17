@@ -1,12 +1,9 @@
 import { useNavigate } from "react-router";
-import type { DiaryEntry } from "../data/entries";
+import { type DiaryEntry, splitName } from "../lib/storage";
 
-interface DiaryCardProps {
-  entry: DiaryEntry;
-}
-
-export function DiaryCard({ entry }: DiaryCardProps) {
+export function DiaryCard({ entry }: { entry: DiaryEntry }) {
   const navigate = useNavigate();
+  const { anchor, observation } = splitName(entry.name);
 
   return (
     <article
@@ -41,19 +38,24 @@ export function DiaryCard({ entry }: DiaryCardProps) {
           overflow: "hidden",
         }}
       >
-        <img
-          src={entry.photoUrl}
-          alt={entry.name}
-          loading="lazy"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
-        />
+        {entry.photo ? (
+          <img
+            src={entry.photo}
+            alt={entry.name}
+            loading="lazy"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        ) : entry.isBlend && entry.blendPhotos ? (
+          <BlendPhotoComposite photos={entry.blendPhotos} name={entry.name} />
+        ) : null}
+
         {/* Inset border — printed photograph feel */}
         <div
           style={{
@@ -63,18 +65,19 @@ export function DiaryCard({ entry }: DiaryCardProps) {
             pointerEvents: "none",
           }}
         />
-        {/* Blend indicator */}
-        {(entry as unknown as { isBlend?: boolean }).isBlend && (
-          <span style={{
-            position: "absolute",
-            bottom: 8,
-            right: 10,
-            fontFamily: "var(--font-ui)",
-            fontSize: 11,
-            color: "rgba(255,255,255,0.75)",
-            userSelect: "none",
-            pointerEvents: "none",
-          }}>
+        {entry.isBlend && (
+          <span
+            style={{
+              position: "absolute",
+              bottom: 8,
+              right: 10,
+              fontFamily: "var(--font-ui)",
+              fontSize: 11,
+              color: "rgba(255,255,255,0.75)",
+              userSelect: "none",
+              pointerEvents: "none",
+            }}
+          >
             ⊕
           </span>
         )}
@@ -82,76 +85,64 @@ export function DiaryCard({ entry }: DiaryCardProps) {
 
       {/* Palette strip — 18px, flush below photo */}
       <div style={{ display: "flex", height: 18 }}>
-        {entry.colors.map((color, i) => (
+        {entry.swatches.map((color, i) => (
           <div key={i} style={{ flex: 1, background: color }} />
         ))}
       </div>
 
       {/* Name — two-tier typographic hierarchy */}
       <div style={{ padding: "16px 14px 0", marginBottom: 6 }}>
-        {(() => {
-          const dotIndex = entry.name.indexOf(". ");
-          const anchor = dotIndex !== -1 ? entry.name.slice(0, dotIndex + 1) : entry.name;
-          const observation = dotIndex !== -1 ? entry.name.slice(dotIndex + 2) : null;
-          return (
-            <>
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: "var(--font-ui)",
-                  fontWeight: 500,
-                  fontSize: 11,
-                  color: "#1A1814",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  marginBottom: 4,
-                }}
-              >
-                {anchor}
-              </span>
-              {observation && (
-                <span
-                  style={{
-                    display: "block",
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 300,
-                    fontSize: 17,
-                    color: "#1A1814",
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {observation}
-                </span>
-              )}
-            </>
-          );
-        })()}
+        <span
+          style={{
+            display: "block",
+            fontFamily: "var(--font-ui)",
+            fontWeight: 500,
+            fontSize: 11,
+            color: "#1A1814",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            marginBottom: 4,
+          }}
+        >
+          {anchor}
+        </span>
+        {observation && (
+          <span
+            style={{
+              display: "block",
+              fontFamily: "var(--font-display)",
+              fontWeight: 300,
+              fontSize: 17,
+              color: "#1A1814",
+              lineHeight: 1.45,
+            }}
+          >
+            {observation}
+          </span>
+        )}
       </div>
 
       {/* Meta */}
       <div style={{ padding: "0 14px 14px" }}>
-        <span
-          style={{
-            fontFamily: "var(--font-ui)",
-            fontWeight: 400,
-            fontSize: 11,
-            color: "#8C8880",
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-          }}
-        >
-          {entry.location}, {entry.country}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--font-ui)",
-            fontSize: 11,
-            color: "#8C8880",
-            padding: "0 6px",
-          }}
-        >
-          ·
-        </span>
+        {entry.location && (
+          <>
+            <span
+              style={{
+                fontFamily: "var(--font-ui)",
+                fontWeight: 400,
+                fontSize: 11,
+                color: "#8C8880",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+              }}
+            >
+              {entry.location}
+            </span>
+            <span style={{ fontFamily: "var(--font-ui)", fontSize: 11, color: "#8C8880", padding: "0 6px" }}>
+              ·
+            </span>
+          </>
+        )}
         <span
           style={{
             fontFamily: "var(--font-mono)",
@@ -160,7 +151,7 @@ export function DiaryCard({ entry }: DiaryCardProps) {
             color: "#8C8880",
           }}
         >
-          {new Date(entry.date).toLocaleDateString("en-GB", {
+          {new Date(entry.timestamp).toLocaleDateString("en-GB", {
             day: "numeric",
             month: "short",
             year: "numeric",
@@ -168,5 +159,48 @@ export function DiaryCard({ entry }: DiaryCardProps) {
         </span>
       </div>
     </article>
+  );
+}
+
+function BlendPhotoComposite({
+  photos,
+  name,
+}: {
+  photos: [string | null, string | null];
+  name: string;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+      }}
+    >
+      {photos[0] && (
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <img
+            src={photos[0]}
+            alt={name}
+            style={{ width: "200%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        </div>
+      )}
+      {photos[1] && (
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <img
+            src={photos[1]}
+            alt={name}
+            style={{
+              width: "200%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              marginLeft: "-100%",
+            }}
+          />
+        </div>
+      )}
+    </div>
   );
 }

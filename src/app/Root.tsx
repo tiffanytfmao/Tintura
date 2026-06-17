@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
+import { getRoll } from "./lib/storage";
 
 function GrainOverlay() {
   return (
@@ -103,11 +104,13 @@ function NavCaptureCTA() {
   );
 }
 
-export function Nav({ rollCount = 3 }: { rollCount?: number }) {
+export function Nav() {
   const navigate = useNavigate();
   const location = useLocation();
   const [reelHovered, setReelHovered] = useState(false);
   const isDiary = location.pathname === "/";
+  // Re-reads on every navigation since Nav re-renders with location changes
+  const rollCount = getRoll().length;
 
   return (
     <nav style={{ borderBottom: "1px solid #E8E4DC" }}>
@@ -205,7 +208,7 @@ export default function Root() {
         ::-webkit-scrollbar { width: 0; height: 0; }
         * { scrollbar-width: none; }
       `}</style>
-      <Nav rollCount={3} />
+      <Nav />
       <Outlet />
     </div>
   );

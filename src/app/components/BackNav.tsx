@@ -38,7 +38,7 @@ export function BackNav({ label, to }: BackNavProps) {
           el.style.textDecoration = "none";
         }}
       >
-        ← Back
+        ← {label}
       </button>
     </div>
   );

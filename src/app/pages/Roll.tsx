@@ -1,49 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { BackNav } from "../components/BackNav";
+import { getRoll, type RollEntry, formatTimestamp } from "../lib/storage";
 
 const MAX_SLOTS = 12;
 
-interface RollEntry {
-  id: string;
-  note: string;
-  timestamp: string;
-  gradient: string;
-  photoUrl?: string;
+function gradientFromId(id: string): string {
+  let hash = 0;
+  for (const c of id) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff;
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 50) % 360;
+  return `linear-gradient(160deg, hsl(${h1},40%,30%) 0%, hsl(${h2},50%,60%) 100%)`;
 }
-
-const DEVELOPING: RollEntry[] = [
-  {
-    id: "r1",
-    note: "the colour of old copper on a wet morning",
-    timestamp: "Today · 08:42",
-    gradient: "linear-gradient(160deg, #8a5c28 0%, #c4882a 30%, #e0aa60 60%, #b07840 100%)",
-  },
-  {
-    id: "r2",
-    note: "neon on wet tarmac after the rain stopped",
-    timestamp: "Today · 07:14",
-    gradient: "linear-gradient(145deg, #1a1f3a 0%, #2d3a6b 30%, #c43a6e 65%, #f59a3a 100%)",
-  },
-  {
-    id: "r3",
-    note: "every balcony had laundry in a different faded colour",
-    timestamp: "Yesterday · 16:55",
-    gradient: "linear-gradient(170deg, #d4a843 0%, #c08040 30%, #8a5030 60%, #6b3820 100%)",
-  },
-  {
-    id: "r4",
-    note: "shadow of a drainpipe at exactly 2pm",
-    timestamp: "Yesterday · 14:03",
-    gradient: "linear-gradient(135deg, #c8c4bc 0%, #9a9690 35%, #6a6660 65%, #3a3632 100%)",
-  },
-  {
-    id: "r5",
-    note: "the inside of a flower market, very early",
-    timestamp: "3 days ago · 06:28",
-    gradient: "linear-gradient(155deg, #e8b4c0 0%, #d4789a 25%, #a84870 55%, #6a2040 85%, #3a1020 100%)",
-  },
-];
 
 function PulsingDot() {
   return (
@@ -84,18 +52,10 @@ function DevelopingCard({ entry }: { entry: RollEntry }) {
       }}
     >
       {/* Blurred photo area — 3:4 */}
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          paddingTop: "133.33%",
-          overflow: "hidden",
-        }}
-      >
-        {/* Blurred photo — img if real photo exists, gradient placeholder for demo */}
-        {entry.photoUrl ? (
+      <div style={{ position: "relative", width: "100%", paddingTop: "133.33%", overflow: "hidden" }}>
+        {entry.photo ? (
           <img
-            src={entry.photoUrl}
+            src={entry.photo}
             alt=""
             style={{
               position: "absolute",
@@ -113,7 +73,7 @@ function DevelopingCard({ entry }: { entry: RollEntry }) {
             style={{
               position: "absolute",
               inset: 0,
-              background: entry.gradient,
+              background: gradientFromId(entry.id),
               filter: "blur(18px)",
               transform: "scale(1.12)",
             }}
@@ -121,13 +81,7 @@ function DevelopingCard({ entry }: { entry: RollEntry }) {
         )}
 
         {/* Frosted overlay */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(247, 244, 238, 0.12)",
-          }}
-        />
+        <div style={{ position: "absolute", inset: 0, background: "rgba(247, 244, 238, 0.12)" }} />
 
         {/* Hover scrim + "Develop →" */}
         <div
@@ -142,15 +96,7 @@ function DevelopingCard({ entry }: { entry: RollEntry }) {
             transition: "opacity 150ms ease",
           }}
         >
-          <span
-            style={{
-              fontFamily: "var(--font-ui)",
-              fontWeight: 500,
-              fontSize: 13,
-              color: "#FFFFFF",
-              letterSpacing: "0.03em",
-            }}
-          >
+          <span style={{ fontFamily: "var(--font-ui)", fontWeight: 500, fontSize: 13, color: "#FFFFFF", letterSpacing: "0.03em" }}>
             Develop →
           </span>
         </div>
@@ -194,7 +140,7 @@ function DevelopingCard({ entry }: { entry: RollEntry }) {
           padding: "4px 14px 14px",
         }}
       >
-        {entry.timestamp}
+        {formatTimestamp(entry.timestamp)}
       </div>
     </article>
   );
@@ -217,12 +163,8 @@ function EmptySlot() {
         justifyContent: "center",
         transition: "border-color 180ms ease",
       }}
-      onMouseEnter={(e) =>
-        ((e.currentTarget as HTMLElement).style.borderColor = "var(--color-accent-amber)")
-      }
-      onMouseLeave={(e) =>
-        ((e.currentTarget as HTMLElement).style.borderColor = "#E8E4DC")
-      }
+      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.borderColor = "var(--color-accent-amber)")}
+      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.borderColor = "#E8E4DC")}
     >
       <svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="#C4A882" strokeWidth="1" opacity="0.5">
         <rect x="1" y="1" width="18" height="14" rx="1.5" />
@@ -257,78 +199,64 @@ function FullRollBanner() {
 }
 
 export default function Roll() {
-  const developingCount = DEVELOPING.length;
-  const emptyCount = MAX_SLOTS - developingCount;
-  const isFull = developingCount === MAX_SLOTS;
+  const developing = getRoll();
+  const developingCount = developing.length;
+  const emptyCount = Math.max(0, MAX_SLOTS - developingCount);
+  const isFull = developingCount >= MAX_SLOTS;
 
   const slots = [
-    ...DEVELOPING.map((e) => ({ type: "developing" as const, entry: e })),
+    ...developing.map((e) => ({ type: "developing" as const, entry: e })),
     ...Array.from({ length: emptyCount }, (_, i) => ({ type: "empty" as const, id: `empty-${i}` })),
   ];
 
   return (
     <>
-    <BackNav label="Diary" to="/" />
-    <main
-      style={{
-        maxWidth: 1200,
-        margin: "0 auto",
-        padding: "32px 48px 120px",
-      }}
-    >
-      {/* Page header */}
-      <div style={{ marginBottom: 40 }}>
-        <h1
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 300,
-            fontSize: 48,
-            color: "var(--color-text-primary)",
-            lineHeight: 1.1,
-            margin: "0 0 10px",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          The Roll
-        </h1>
-        <p
-          style={{
-            fontFamily: "var(--font-ui)",
-            fontWeight: 400,
-            fontSize: 13,
-            color: "var(--color-text-secondary)",
-            margin: 0,
-          }}
-        >
-          {developingCount} photos developing · {emptyCount} frames left
-        </p>
-      </div>
+      <BackNav label="back" to="/" />
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 48px 120px" }}>
 
-      {isFull && <FullRollBanner />}
+        <div style={{ marginBottom: 40 }}>
+          <h1
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 300,
+              fontSize: 48,
+              color: "var(--color-text-primary)",
+              lineHeight: 1.1,
+              margin: "0 0 10px",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            The Roll
+          </h1>
+          <p style={{ fontFamily: "var(--font-ui)", fontWeight: 400, fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
+            {developingCount === 0
+              ? `${MAX_SLOTS} frames ready — go capture something.`
+              : `${developingCount} photo${developingCount !== 1 ? "s" : ""} developing · ${emptyCount} frame${emptyCount !== 1 ? "s" : ""} left`}
+          </p>
+        </div>
 
-      {/* Grid */}
-      <style>{`
-        .roll-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 24px;
-          align-items: start;
-        }
-        @media (max-width: 1000px) {
-          .roll-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-      `}</style>
+        {isFull && <FullRollBanner />}
 
-      <div className="roll-grid">
-        {slots.map((slot) =>
-          slot.type === "developing" ? (
-            <DevelopingCard key={slot.entry.id} entry={slot.entry} />
+        <style>{`
+          .roll-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; align-items: start; }
+          @media (max-width: 1000px) { .roll-grid { grid-template-columns: repeat(2, 1fr); } }
+        `}</style>
+
+        <div className="roll-grid">
+          {developingCount === 0 ? (
+            // Empty roll: show all 12 empty slots
+            Array.from({ length: MAX_SLOTS }, (_, i) => <EmptySlot key={`empty-${i}`} />)
           ) : (
-            <EmptySlot key={slot.id} />
-          )
-        )}
-      </div>
-    </main>
+            slots.map((slot) =>
+              slot.type === "developing" ? (
+                <DevelopingCard key={slot.entry.id} entry={slot.entry} />
+              ) : (
+                <EmptySlot key={slot.id} />
+              )
+            )
+          )}
+        </div>
+      </main>
     </>
   );
 }
