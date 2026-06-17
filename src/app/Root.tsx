@@ -213,7 +213,7 @@ export default function Root() {
           .nav-inner { padding: 14px 20px 16px; }
           .nav-reel-label { display: none; }
           .nav-reel svg { width: 28px; height: 28px; }
-          .nav-cta-text { display: none; }
+          .nav-cta-text { font-size: 11px; }
         }
       `}</style>
       <Nav />
