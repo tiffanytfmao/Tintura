@@ -218,9 +218,9 @@ function BlendResultPanel({ left, right, name, setName, blendPalette, setBlendPa
               return (
                 <div
                   key={i}
-                  onClick={() => !used && addColor(color)}
-                  style={{ width: 36, height: 36, borderRadius: 3, background: color, position: "relative", opacity: used ? 0.35 : 1, cursor: used ? "default" : "pointer", transition: "transform 150ms ease, opacity 150ms ease", flexShrink: 0 }}
-                  onMouseEnter={(e) => { if (!used) (e.currentTarget as HTMLElement).style.transform = "scale(1.08)"; }}
+                  onClick={() => used ? removeColor(blendPalette.indexOf(color)) : addColor(color)}
+                  style={{ width: 36, height: 36, borderRadius: 3, background: color, position: "relative", opacity: 1, cursor: "pointer", transition: "transform 150ms ease, opacity 150ms ease", flexShrink: 0 }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "scale(1.08)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
                 >
                   {used ? (
